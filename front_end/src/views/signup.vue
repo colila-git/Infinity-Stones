@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -8,11 +8,14 @@ const router = useRouter();
 
 const fname = ref('');
 const lname = ref('');
-const sid = ref('');
+const idNumber = ref('');
 const email = ref('');
-const dept = ref('');
-const year = ref('');
 const password = ref('');
+const confirmPassword = ref('');
+const passwordsMatch = computed(() => {
+  if (!confirmPassword.value) return null;
+  return password.value === confirmPassword.value;
+});
 const accountType = ref('user');
 const role = ref('user');
 const approvalStatus = ref('approved');
@@ -40,11 +43,10 @@ async function handleSignup() {
   if (
     !fname.value.trim() ||
     !lname.value.trim() ||
-    !sid.value.trim() ||
+    !idNumber.value.trim() ||
     !email.value.trim() ||
-    !dept.value ||
-    !year.value ||
-    !password.value.trim()
+    !password.value.trim() ||
+    !confirmPassword.value.trim()
   ) {
     errorMsg.value = 'Please fill in all required fields.';
     return;
@@ -52,6 +54,17 @@ async function handleSignup() {
 
   if (!isValidEmail(email.value.trim())) {
     errorMsg.value = 'Enter a valid email address.';
+    return;
+  }
+
+  // Only allow GBox email addresses
+  if (!email.value.trim().toLowerCase().endsWith('@gbox.adnu.edu.ph')) {
+    errorMsg.value = 'Please use your official AdNU GBox email address.';
+    return;
+  }
+
+  if (password.value !== confirmPassword.value) {
+    errorMsg.value = 'Passwords do not match.';
     return;
   }
 
@@ -80,7 +93,7 @@ async function handleSignup() {
     await updateProfile(cred.user, {
       displayName: `${fname.value.trim()} ${lname.value.trim()}`,
     });
-    // TODO: save sid, dept, year to Firestore/back_end here, keyed by cred.user.uid
+
     router.push('/main');
   } catch (err) {
     errorMsg.value = formatAuthError(err);
@@ -109,7 +122,7 @@ function goToLanding() {
           </div>
         </div>
         <h2>Create Account</h2>
-        <p class="sub">Register to join your department's intramural team.</p>
+        <p class="sub">Register to participate in Ateneo de Naga University's Intramurals.</p>
 
         <div class="form-row">
           <div class="form-group">
@@ -118,40 +131,18 @@ function goToLanding() {
           </div>
           <div class="form-group">
             <label>Last Name</label>
-            <input type="text" v-model="lname" placeholder="dela Cruz" />
+            <input type="text" v-model="lname" placeholder="Dela Cruz" />
           </div>
         </div>
 
         <div class="form-group">
-          <label>Student ID</label>
-          <input type="text" v-model="sid" placeholder="2026-00000" />
+          <label>ID Number</label>
+          <input type="text" v-model="idNumber" placeholder="Enter your ID Number" />
         </div>
 
         <div class="form-group">
           <label>Email Address</label>
-          <input type="email" v-model="email" placeholder="juan@student.adnu.edu.ph" />
-        </div>
-
-        <div class="form-group">
-          <label>Department</label>
-          <select v-model="dept">
-            <option value="">Select Department</option>
-            <option>IT</option>
-            <option>CS</option>
-            <option>IS</option>
-            <option>DIA</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Year Level</label>
-          <select v-model="year">
-            <option value="">Select Year Level</option>
-            <option>1st Year</option>
-            <option>2nd Year</option>
-            <option>3rd Year</option>
-            <option>4th Year</option>
-          </select>
+          <input type="email" v-model="email" placeholder="jcruz@gbox.adnu.edu.ph" />
         </div>
 
         <div class="form-group">
@@ -212,8 +203,39 @@ function goToLanding() {
 
         <div class="form-group">
           <label>Password</label>
-          <input type="password" v-model="password" placeholder="••••••••" />
+          <input
+            type="password"
+            v-model="password"
+            placeholder="••••••••"
+            :class="{
+              'input-valid': passwordsMatch === true,
+              'input-invalid': passwordsMatch === false
+            }"
+          />
         </div>
+
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input
+            type="password"
+            v-model="confirmPassword"
+            placeholder="••••••••"
+          />
+
+        <p
+          v-if="passwordsMatch === true"
+          class="success-text"
+        >
+          ✓ Passwords match
+        </p>
+
+        <p
+          v-if="passwordsMatch === false"
+          class="error-text"
+        >
+          ✗ Passwords do not match
+        </p>
+      </div>
 
         <p v-if="errorMsg" class="error-text">{{ errorMsg }}</p>
 
@@ -451,10 +473,24 @@ function goToLanding() {
   transform: none;
 }
 
+.success-text {
+  color: #4ade80;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
 .error-text {
   color: #ff6b6b;
   font-size: 12px;
   margin-bottom: 12px;
+}
+
+.input-valid {
+  border-color: #4ade80 !important;
+}
+
+.input-invalid {
+  border-color: #ff6b6b !important;
 }
 
 .full-width {
