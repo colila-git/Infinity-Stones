@@ -4,6 +4,8 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes");
+require("./config/firebaseAdmin");
+const eventRoutes = require("./routes/eventRoutes");
 
 dotenv.config();
 
@@ -14,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/events", eventRoutes);
 
 // Test route
 app.get("/", (req, res) => {

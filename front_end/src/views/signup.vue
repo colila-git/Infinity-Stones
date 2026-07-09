@@ -9,6 +9,7 @@ const router = useRouter();
 const fname = ref('');
 const lname = ref('');
 const idNumber = ref('');
+const affiliation = ref('');
 const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
@@ -41,6 +42,7 @@ function formatAuthError(err) {
 
 async function handleSignup() {
   if (
+    !affiliation.value ||
     !fname.value.trim() ||
     !lname.value.trim() ||
     !idNumber.value.trim() ||
@@ -49,6 +51,11 @@ async function handleSignup() {
     !confirmPassword.value.trim()
   ) {
     errorMsg.value = 'Please fill in all required fields.';
+    return;
+  }
+
+  if (!/^\d{9}$/.test(idNumber.value)) {
+    errorMsg.value = 'ID Number must contain exactly 9 digits.';
     return;
   }
 
@@ -137,7 +144,26 @@ function goToLanding() {
 
         <div class="form-group">
           <label>ID Number</label>
-          <input type="text" v-model="idNumber" placeholder="Enter your ID Number" />
+          <input
+            type="text"
+            inputmode="numeric"
+            v-model="idNumber"
+            placeholder="Enter your ID Number"
+            maxlength="9"
+            @input="idNumber = idNumber.replace(/\D/g, '')"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Affiliation</label>
+
+          <select v-model="affiliation">
+            <option disabled value="">Select Your Affiliation</option>
+
+            <option value="CO">College (CO)</option>
+            <option value="SH">Senior High School (SH)</option>
+            <option value="HR">Faculty / Teachers (HR)</option>
+          </select>
         </div>
 
         <div class="form-group">
