@@ -103,6 +103,8 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res, next) => {
 
+    console.log("LOGIN CONTROLLER HIT");
+
     try {
 
         const { idToken } = req.body;
