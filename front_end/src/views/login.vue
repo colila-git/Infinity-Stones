@@ -55,7 +55,7 @@ const idToken = await userCredential.user.getIdToken();
 
 console.log("FIREBASE TOKEN:", idToken);
 
-const response = await fetch("http://localhost:3000/api/auth/login", {
+const response = await fetch("https://infinite-stones.onrender.com/api/auth/login", {
   method: "POST",
   headers: {
     "Content-Type": "application/json"

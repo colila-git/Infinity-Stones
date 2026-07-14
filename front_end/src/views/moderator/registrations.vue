@@ -24,7 +24,7 @@ async function loadRegistrations() {
     const idToken = await auth.currentUser.getIdToken();
 
     const response = await fetch(
-        "http://localhost:3000/api/registrations",
+        "https://infinite-stones.onrender.com/api/registrations",
         {
             headers: {
                 Authorization: `Bearer ${idToken}`

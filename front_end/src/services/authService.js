@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-    baseURL: "http://localhost:3000/api"
+    baseURL: "https://infinite-stones.onrender.com/api"
 });
 
 export const registerUser = async (userData) => {

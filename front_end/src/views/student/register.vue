@@ -159,7 +159,7 @@ async function loadStudentInfo() {
   const idToken = await auth.currentUser.getIdToken()
 
   const response = await fetch(
-    "http://localhost:3000/api/auth/me",
+    "https://infinite-stones.onrender.com/api/auth/me",
     {
       method: "POST",
       headers: {
@@ -203,7 +203,7 @@ async function handleSubmit() {
     for (const eventName of form.events) {
 
       const response = await fetch(
-        "http://localhost:3000/api/registrations",
+        "https://infinite-stones.onrender.com/api/registrations",
         {
           method: "POST",
           headers: {

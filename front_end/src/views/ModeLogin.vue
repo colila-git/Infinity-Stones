@@ -30,7 +30,7 @@ async function handleModLogin() {
     console.log("TOKEN:", idToken);
 
     const response = await fetch(
-      "http://localhost:3000/api/moderators/check",
+      "https://infinite-stones.onrender.com/api/moderators/check",
       {
         headers: {
           Authorization: `Bearer ${idToken}`

@@ -26,7 +26,7 @@ async function loadPendingModerators() {
     const idToken = await auth.currentUser.getIdToken();
 
     const response = await fetch(
-        "http://localhost:3000/api/moderators/pending",
+        "https://infinite-stones.onrender.com/api/moderators/pending",
         {
             headers: {
                 Authorization: `Bearer ${idToken}`
@@ -57,7 +57,7 @@ async function approveModerator(uid) {
     const idToken = await auth.currentUser.getIdToken();
 
     const response = await fetch(
-        `http://localhost:3000/api/moderators/${uid}/approve`,
+        `https://infinite-stones.onrender.com/api/moderators/${uid}/approve`,
         {
             method: "PATCH",
             headers: {
@@ -89,7 +89,7 @@ async function rejectModerator(uid) {
     const idToken = await auth.currentUser.getIdToken();
 
     const response = await fetch(
-        `http://localhost:3000/api/moderators/${uid}/reject`,
+        `https://infinite-stones.onrender.com/api/moderators/${uid}/reject`,
         {
             method: "PATCH",
             headers: {

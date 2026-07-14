@@ -24,7 +24,7 @@ async function loadRejectedModerators() {
     const idToken = await auth.currentUser.getIdToken();
 
     const response = await fetch(
-        "http://localhost:3000/api/moderators/rejected",
+        "https://infinite-stones.onrender.com/api/moderators/rejected",
         {
             headers: {
                 Authorization: `Bearer ${idToken}`

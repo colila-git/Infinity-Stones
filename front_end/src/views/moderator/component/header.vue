@@ -16,7 +16,7 @@ async function loadStats() {
 
   const idToken = await auth.currentUser.getIdToken();
 
-  const response = await fetch("http://localhost:3000/api/moderators/stats", {
+  const response = await fetch("https://infinite-stones.onrender.com/api/moderators/stats", {
     method: "GET",
     headers: {
       Authorization: `Bearer ${idToken}`

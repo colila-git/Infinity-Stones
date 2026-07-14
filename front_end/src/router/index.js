@@ -128,7 +128,7 @@ router.beforeEach(async (to) => {
     const idToken = await auth.currentUser.getIdToken();
 
 
-    const response = await fetch("http://localhost:3000/api/auth/me", {
+    const response = await fetch("https://infinite-stones.onrender.com/api/auth/me", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

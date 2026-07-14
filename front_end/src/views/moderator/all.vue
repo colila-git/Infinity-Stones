@@ -24,7 +24,7 @@ async function loadAllModerators() {
     const idToken = await auth.currentUser.getIdToken();
 
     const response = await fetch(
-        "http://localhost:3000/api/moderators/all",
+        "https://infinite-stones.onrender.com/api/moderators/all",
         {
             headers: {
                 Authorization: `Bearer ${idToken}`

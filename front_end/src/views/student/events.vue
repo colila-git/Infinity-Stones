@@ -34,7 +34,7 @@ const sportsData = ref({
 async function loadSports() {
 
   const response = await fetch(
-    "http://localhost:3000/api/events/sports"
+    "https://infinite-stones.onrender.com/api/events/sports"
   );
 
   const result = await response.json();

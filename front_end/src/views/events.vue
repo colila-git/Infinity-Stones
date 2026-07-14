@@ -134,7 +134,7 @@ async function registerForEvent(event) {
   const idToken = await auth.currentUser.getIdToken();
 
   const response = await fetch(
-    "http://localhost:3000/api/registrations",
+    "https://infinite-stones.onrender.com/api/registrations",
     {
       method: "POST",
       headers: {
