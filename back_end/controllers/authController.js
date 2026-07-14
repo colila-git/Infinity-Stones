@@ -123,3 +123,57 @@ exports.login = async (req, res, next) => {
     }
 
 };
+
+exports.modLogin = async (req, res, next) => {
+
+    try {
+
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({
+                success: false,
+                message: "ID token is required."
+            });
+        }
+
+        const result = await authService.modLoginUser(idToken);
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+        next(error);
+    }
+
+};
+
+exports.getCurrentUser = async (req, res, next) => {
+
+    try {
+
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({
+                success: false,
+                message: "ID token is required."
+            });
+        }
+
+
+        const user = await authService.getCurrentUser(idToken);
+
+
+        return res.json({
+            success: true,
+            data: user
+        });
+
+
+    } catch(error) {
+
+        next(error);
+
+    }
+
+};

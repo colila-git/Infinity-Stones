@@ -1,8 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '../firebase';
 
 const router = useRouter();
 
@@ -18,8 +16,6 @@ const passwordsMatch = computed(() => {
   return password.value === confirmPassword.value;
 });
 const accountType = ref('user');
-const role = ref('user');
-const approvalStatus = ref('approved');
 const errorMsg = ref('');
 const loading = ref(false);
 
@@ -84,30 +80,36 @@ async function handleSignup() {
   loading.value = true;
 
   try {
-    if (accountType.value === 'moderator') {
-      role.value = 'moderator';
-      approvalStatus.value = 'pending';
-    } else {
-      role.value = 'user';
-      approvalStatus.value = 'approved';
-    }
     
-    const cred = await createUserWithEmailAndPassword(
-      auth,
-      email.value.trim(),
-      password.value
-    );
-    await updateProfile(cred.user, {
-      displayName: `${fname.value.trim()} ${lname.value.trim()}`,
+    const response = await fetch("http://localhost:3000/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        idNumber: idNumber.value,
+        affiliation: affiliation.value,
+        firstName: fname.value.trim(),
+        lastName: lname.value.trim(),
+        email: email.value.trim(),
+        password: password.value,
+        accountType: accountType.value
+      })
     });
 
-    router.push('/main');
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message);
+    }
+
+    router.push("/login");
   } catch (err) {
-    errorMsg.value = formatAuthError(err);
-  } finally {
-    loading.value = false;
+    errorMsg.value = err.message || "Registration failed.";
   }
+    loading.value = false;
 }
+
 
 function goToLogin() {
   router.push('/login');

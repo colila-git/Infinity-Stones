@@ -9,7 +9,7 @@ import { auth } from '../../firebase'
 
 const router = useRouter()
 
-const moderators = ref([])
+const registrations = ref([])
 
 async function handleSignOut() {
 
@@ -19,12 +19,12 @@ async function handleSignOut() {
 
 }
 
-async function loadRejectedModerators() {
+async function loadRegistrations() {
 
     const idToken = await auth.currentUser.getIdToken();
 
     const response = await fetch(
-        "http://localhost:3000/api/moderators/rejected",
+        "http://localhost:3000/api/registrations",
         {
             headers: {
                 Authorization: `Bearer ${idToken}`
@@ -35,35 +35,15 @@ async function loadRejectedModerators() {
     const result = await response.json();
 
     if (result.success) {
-        moderators.value = result.data;
+        registrations.value = result.data;
     }
 
 }
 
-function formatDate(date) {
-
-    if (!date) return "N/A";
-
-    const d = new Date(date);
-
-    const formattedDate = d.toLocaleDateString("en-PH", {
-        month: "long",
-        day: "numeric",
-        year: "numeric"
-    });
-
-    const formattedTime = d.toLocaleTimeString("en-PH", {
-        hour: "numeric",
-        minute: "2-digit"
-    });
-
-    return `${formattedDate} • ${formattedTime}`;
-
-}
-
 onMounted(() => {
-    loadRejectedModerators();
+    loadRegistrations();
 });
+
 </script>
 
 <template>
@@ -73,28 +53,29 @@ onMounted(() => {
 
         <div class="content-card">
 
-            <h1>Rejected Applications</h1>
+            <h1>Student Registrations</h1>
 
             <div
-                v-for="moderator in moderators"
-                :key="moderator.uid"
+                v-for="registration in registrations"
+                :key="registration.id"
                 class="application-card"
             >
 
                 <h3>
-                    {{ moderator.first_name }}
-                    {{ moderator.last_name }}
+                    {{ registration.first_name }}
+                    {{ registration.last_name }}
                 </h3>
 
-                <p>{{ moderator.email }}</p>
+                <p>{{ registration.email }}</p>
 
-                <p>Affiliation: {{ moderator.affiliation }}</p>
+                <p><strong>Event:</strong> {{ registration.event_name }}</p>
 
-                <p>Status: {{ moderator.approval_status }}</p>
+                <p><strong>Status:</strong> {{ registration.status }}</p>
 
-                <p>Rejected by: {{ moderator.rejected_by_name }}</p>
-
-                <p>Rejected on: {{ formatDate(moderator.rejected_at) }}</p>
+                <p>
+                    Registered:
+                    {{ new Date(registration.registered_at).toLocaleString() }}
+                </p>
 
             </div>
 

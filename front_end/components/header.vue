@@ -25,6 +25,7 @@ const navLinks = [
   { label: 'Menu', name: 'menu' },
   { label: 'Inbox', name: 'inbox' },
   { label: 'Events', name: 'events' },
+  { label: 'My Registrations', name: 'my-registrations' },
 ];
 
 const sidebarLinks = [
@@ -33,7 +34,7 @@ const sidebarLinks = [
   { label: 'Board Games', action: () => router.push({ name: 'events', query: { category: 'boardgames' } }) },
   { label: 'Musical Arts', action: () => router.push({ name: 'events', query: { category: 'musical' } }) },
   { label: 'Inbox', action: () => router.push({ name: 'inbox' }) },
-  { label: 'Register', action: () => router.push({ name: 'register' }) },
+  { label: 'My Registrations', action: () => router.push({ name: 'my-registrations' }) },
 ];
 
 function isActive(name) {

@@ -9,45 +9,6 @@
     </div>
 
     <div class="register-body">
-      <!-- Personal Information -->
-      <div class="form-card">
-        <h4>Personal Information</h4>
-        <div class="form-row">
-          <div class="form-group">
-            <label>First Name</label>
-            <input type="text" v-model.trim="form.fname" placeholder="Juan" />
-          </div>
-          <div class="form-group">
-            <label>Last Name</label>
-            <input type="text" v-model.trim="form.lname" placeholder="dela Cruz" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Student ID</label>
-          <input type="text" v-model.trim="form.sid" placeholder="2026-00000" />
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" v-model.trim="form.email" placeholder="juan@student.adnu.edu.ph" />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Department</label>
-            <select v-model="form.dept">
-              <option value="">Select Department</option>
-              <option v-for="d in departments" :key="d" :value="d">{{ d }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Year Level</label>
-            <select v-model="form.year">
-              <option value="">Select Year Level</option>
-              <option v-for="y in yearLevels" :key="y" :value="y">{{ y }}</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
       <!-- Choose Events -->
       <div class="form-card">
         <h4>Choose Events</h4>
@@ -91,6 +52,7 @@
 </template>
 
 <script setup>
+import { auth } from "../../firebase";
 import { reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Header from '../../../components/header.vue'
@@ -112,15 +74,20 @@ const yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year']
 
 // Flat list of all events across categories, in the same order as the reference design
 const allEvents = [
-  "Basketball (Men's)", "Basketball (Women's)", "Volleyball (Men's)",
-  "Volleyball (Women's)", "Badminton (Men's)", "Badminton (Women's)",
-  "Football (Men's)", "Football (Women's)",
-  'Valorant (5v5)', 'Mobile Legends: Bang Bang', 'League of Legends (5v5)',
-  'Call of Duty Mobile', 'Tekken 8 (1v1)',
-  'Chess', 'Checkers', 'Scrabble', 'Game of the Generals', 'Sungka',
-  'Battle of the Bands', 'Solo Singing', 'Duo Singing',
-  'Dance Competition', 'Cheerdance', 'Gimmick Parade',
+  "Basketball",
+  "Volleyball",
+  "Mobile Legends",
+  "Chess",
+  "Badminton",
 ]
+
+const eventMap = {
+  "Basketball": 1,
+  "Volleyball": 2,
+  "Mobile Legends": 3,
+  "Chess": 4,
+  "Badminton": 6,
+}
 
 const form = reactive({
   fname: '',
@@ -137,11 +104,16 @@ const form = reactive({
 const toast = reactive({ show: false, msg: '' })
 let toastTimer = null
 
-onMounted(() => {
+onMounted(async () => {
+
   const eventName = route.query.event
+
   if (typeof eventName === 'string' && allEvents.includes(eventName)) {
     form.events = [eventName]
   }
+
+  await loadStudentInfo()
+
 })
 
 const initials = computed(() => {
@@ -182,37 +154,89 @@ function resetForm() {
   form.ecNumber = ''
 }
 
-function handleSubmit() {
-  if (!form.fname || !form.lname || !form.sid || !form.email || !form.dept || !form.year) {
-    showToast('Please fill in all required fields.')
-    return
+async function loadStudentInfo() {
+
+  const idToken = await auth.currentUser.getIdToken()
+
+  const response = await fetch(
+    "http://localhost:3000/api/auth/me",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        idToken
+      })
+    }
+  )
+
+  const result = await response.json()
+
+  if (!result.success) return
+
+  const user = result.data
+
+  form.fname = user.first_name
+  form.lname = user.last_name
+  form.sid = user.id_number
+  form.email = user.email
+
+}
+
+async function handleSubmit() {
+
+  if (!form.ecName || !form.ecNumber) {
+    showToast("Please enter your emergency contact information.");
+    return;
   }
+
   if (!form.events.length) {
-    showToast('Please select at least one event.')
-    return
+    showToast("Please select at least one event.");
+    return;
   }
 
-  const application = {
-    fname: form.fname,
-    lname: form.lname,
-    sid: form.sid,
-    email: form.email,
-    dept: form.dept,
-    year: form.year,
-    events: [...form.events],
-    ecName: form.ecName,
-    ecNumber: form.ecNumber,
-    status: 'pending',
-    submitted: new Date().toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }),
+  try {
+
+    const idToken = await auth.currentUser.getIdToken();
+
+    for (const eventName of form.events) {
+
+      const response = await fetch(
+        "http://localhost:3000/api/registrations",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            eventId: eventMap[eventName]
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.success) {
+        showToast(result.message);
+        return;
+      }
+
+    }
+
+    showToast("Registration submitted successfully!");
+
+    resetForm();
+
+  } catch (error) {
+
+    console.error(error);
+
+    showToast("Something went wrong.");
+
   }
 
-  showToast('Registration submitted!')
-  emit('submitted', application)
-  resetForm()
 }
 
 function goBack() {

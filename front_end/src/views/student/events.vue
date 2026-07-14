@@ -1,63 +1,89 @@
 #This is the Eventspage
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Header from '../../../components/header.vue';
 
 const route = useRoute();
 const router = useRouter();
 
-const sportsData = {
-  outdoor: {
-    title: 'Outdoor Sports',
-    heroGradient: 'linear-gradient(135deg,#1A3A6B,#1e4080)',
-    events: [
-      { name: "Basketball (Men's)", venue: 'Gym A', slots: 20, total: 20, desc: 'Full-court 5-on-5 basketball tournament for male CCS students. Double elimination format.' },
-      { name: "Basketball (Women's)", venue: 'Gym A', slots: 20, total: 20, desc: 'Full-court 5-on-5 basketball tournament for female CCS students. Double elimination format.' },
-      { name: "Volleyball (Men's)", venue: 'Gym B', slots: 18, total: 18, desc: 'Indoor volleyball tournament for male CCS students. Single round-robin pool play followed by playoffs.' },
-      { name: "Volleyball (Women's)", venue: 'Gym B', slots: 18, total: 18, desc: 'Indoor volleyball tournament for female CCS students. Single round-robin pool play followed by playoffs.' },
-      { name: "Badminton (Men's)", venue: 'Multi-Purpose Hall', slots: 12, total: 12, desc: 'Badminton tournament for male CCS students. Single elimination format.' },
-      { name: "Badminton (Women's)", venue: 'Multi-Purpose Hall', slots: 12, total: 12, desc: 'Badminton tournament for female CCS students. Single elimination format.' },
-      { name: "Football (Men's)", venue: 'Football Field', slots: 22, total: 22, desc: '11-a-side football tournament for male CCS students. Group stage followed by knockout rounds.' },
-      { name: "Football (Women's)", venue: 'Football Field', slots: 22, total: 22, desc: '11-a-side football tournament for female CCS students. Group stage followed by knockout rounds.' },
-    ],
-  },
-  esports: {
-    title: 'Esports',
-    heroGradient: 'linear-gradient(135deg,#0f0a2e,#3a1a8a)',
-    events: [
-      { name: 'Valorant (5v5)', venue: 'Computer Lab A', slots: 15, total: 15, desc: 'Team-based tactical FPS. 5 players per team, best-of-3 format. Spike Rush rules apply for group stage.' },
-      { name: 'Mobile Legends: Bang Bang', venue: 'Computer Lab A', slots: 30, total: 30, desc: "5v5 MOBA tournament on mobile. Draft pick format for playoffs. Bring your own device." },
-      { name: 'League of Legends (5v5)', venue: 'Computer Lab B', slots: 15, total: 15, desc: "Classic 5v5 Summoner's Rift. Draft mode enabled. PC provided by the venue." },
-      { name: 'Call of Duty Mobile', venue: 'Computer Lab B', slots: 30, total: 30, desc: 'Squad vs squad battle royale and multiplayer modes. Bring your own device and headset.' },
-      { name: 'Tekken 8 (1v1)', venue: 'AVR Room 3', slots: 15, total: 15, desc: 'Solo fighting game tournament. Double elimination bracket. Controllers and arcade sticks allowed.' },
-    ],
-  },
-  boardgames: {
-    title: 'Board Games',
-    heroGradient: 'linear-gradient(135deg,#1A4A3A,#1e8060)',
-    events: [
-      { name: 'Chess', venue: 'AVR Room 1', slots: 16, total: 16, desc: 'Chess tournament for CCS students. Swiss system format.' },
-      { name: 'Checkers', venue: 'AVR Room 1', slots: 16, total: 16, desc: 'Standard checkers tournament in single-elimination format.' },
-      { name: 'Scrabble', venue: 'AVR Room 2', slots: 16, total: 16, desc: 'English Scrabble tournament. Official OSPD dictionary used.' },
-      { name: 'Game of the Generals', venue: 'AVR Room 2', slots: 16, total: 16, desc: 'Filipino strategy board game tournament in single-elimination format.' },
-      { name: 'Sungka', venue: 'AVR Room 2', slots: 16, total: 16, desc: 'Traditional Filipino mancala game tournament.' },
-    ],
-  },
-  musical: {
-    title: 'Musical & Performing Arts',
-    heroGradient: 'linear-gradient(135deg,#4A1A1A,#8B2020)',
-    events: [
-      { name: 'Battle of the Bands', venue: 'Auditorium', slots: 12, total: 12, desc: 'Bands perform original songs. Judged on musicality, stage presence, and originality.' },
-      { name: 'Solo Singing', venue: 'Auditorium', slots: 10, total: 10, desc: 'Individual singing competition open to all CCS students.' },
-      { name: 'Duo Singing', venue: 'Auditorium', slots: 12, total: 12, desc: 'Pair singing competition. Register with your partner.' },
-      { name: 'Dance Competition', venue: 'Auditorium', slots: 25, total: 25, desc: 'Group dance showdown open to all CCS students. 5-minute performance per group.' },
-      { name: 'Cheerdance', venue: 'Auditorium', slots: 50, total: 50, desc: 'Cheerdance competition open to all CCS students. Judged on choreography, stunts, and energy.' },
-      { name: 'Gimmick Parade', venue: 'Campus Grounds', slots: 50, total: 50, desc: 'Parade and gimmick showcase for all CCS students. Creativity and teamwork are key.' },
-    ],
-  },
-};
+const sportsData = ref({
+    outdoor: {
+        title: 'Outdoor Sports',
+        heroGradient: 'linear-gradient(135deg,#1A3A6B,#1e4080)',
+        events: []
+    },
+    esports: {
+        title: 'Esports',
+        heroGradient: 'linear-gradient(135deg,#0f0a2e,#3a1a8a)',
+        events: []
+    },
+    boardgames: {
+        title: 'Board Games',
+        heroGradient: 'linear-gradient(135deg,#1A4A3A,#1e8060)',
+        events: []
+    },
+    musical: {
+        title: 'Musical & Performing Arts',
+        heroGradient: 'linear-gradient(135deg,#4A1A1A,#8B2020)',
+        events: []
+    }
+});
+
+async function loadSports() {
+
+  const response = await fetch(
+    "http://localhost:3000/api/events/sports"
+  );
+
+  const result = await response.json();
+
+  if (!result.success) return;
+
+  // Clear existing events
+  Object.values(sportsData.value).forEach(category => {
+    category.events = [];
+  });
+
+  result.data.forEach(event => {
+
+    const formattedEvent = {
+      id: event.id,
+      name: event.name,
+      venue: event.venue || "TBA",
+      slots: (event.max_slots ?? 0) - (event.approved_slots ?? 0),
+      total: event.max_slots ?? 0,
+      approved: event.approved_slots ?? 0,
+      desc: event.description || `${event.name} tournament.`
+    };
+
+    switch (event.category.toLowerCase()) {
+
+      case "outdoor sports":
+      case "outdoor":
+        sportsData.value.outdoor.events.push(formattedEvent);
+        break;
+
+      case "esports":
+        sportsData.value.esports.events.push(formattedEvent);
+        break;
+
+      case "board games":
+      case "boardgames":
+        sportsData.value.boardgames.events.push(formattedEvent);
+        break;
+
+      case "musical":
+      case "musical & performing arts":
+        sportsData.value.musical.events.push(formattedEvent);
+        break;
+
+    }
+
+  });
+
+}
 
 const categoryOrder = ['outdoor', 'esports', 'boardgames', 'musical'];
 const categoryLabels = {
@@ -82,10 +108,13 @@ watch(
   }
 );
 
-const currentCategory = computed(() => sportsData[activeCategory.value]);
-const currentEvent = computed(
-  () => currentCategory.value.events[activeEventIndex.value]
+const currentCategory = computed(
+    () => sportsData.value[activeCategory.value]
 );
+
+const currentEvent = computed(() => {
+  return currentCategory.value.events[activeEventIndex.value] || null;
+});
 
 function switchCategory(key) {
   activeCategory.value = key;
@@ -105,13 +134,25 @@ function goBack() {
   router.push({ name: 'menu' });
 }
 
-function goToRegister(eventName) {
-  router.push({ name: 'register', query: { event: eventName } });
+function goToRegister(event) {
+
+  if (event.slots <= 0) {
+    return;
+  }
+
+  router.push({
+    name: "register",
+    query: {
+      event: event.name,
+      id: event.id
+    }
+  });
+
 }
 
-function handleAvatarClick() {
-  // TODO: open drawer once Drawer.vue is built
-}
+onMounted(() => {
+    loadSports();
+});
 </script>
 
 <template>
@@ -131,20 +172,37 @@ function handleAvatarClick() {
     </div>
 
     <div class="sports-content">
-      <div class="sport-hero">
-        <div class="sport-hero-img" :style="{ background: currentCategory.heroGradient }"></div>
+
+      <div v-if="currentEvent" class="sport-hero">
+        <div
+          class="sport-hero-img"
+          :style="{ background: currentCategory.heroGradient }"
+        ></div>
+
         <div class="sport-hero-body">
           <h3>{{ currentEvent.name }}</h3>
+
           <div class="meta-chips">
             <span class="chip">TBA</span>
             <span class="chip">{{ currentEvent.venue }}</span>
-            <span class="chip teal">{{ currentEvent.slots }} slots left</span>
+            <span class="chip teal">
+              {{ currentEvent.slots }} slots left
+            </span>
           </div>
+
           <p>{{ currentEvent.desc }}</p>
-          <button class="btn-primary" @click="goToRegister(currentEvent.name)">
+
+          <button
+            class="btn-primary"
+            @click="goToRegister(currentEvent)"
+          >
             Register for this Event →
           </button>
         </div>
+      </div>
+
+      <div v-else class="empty-events">
+        No events available in this category.
       </div>
 
       <div class="section-title">All Events</div>
@@ -165,7 +223,7 @@ function handleAvatarClick() {
             <div class="slots">
               TBA · {{ ev.venue }} · <strong>{{ ev.slots }} left</strong>
             </div>
-            <button class="btn-sm" @click.stop="goToRegister(ev.name)">
+            <button class="btn-sm" @click.stop="goToRegister(ev)">
               Sign Up
             </button>
           </div>

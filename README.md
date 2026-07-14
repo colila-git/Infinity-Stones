@@ -36,3 +36,10 @@ npm run dev
 ```sh
 npm run build
 ```
+## Database Setup
+
+1. Open MySQL Workbench.
+2. Import `database/intrams.sql`.
+3. Configure the backend database credentials in `.env`.
+4. Run the backend server.
+5. Run the frontend application.

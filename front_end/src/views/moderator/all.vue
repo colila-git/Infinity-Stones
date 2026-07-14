@@ -1,16 +1,78 @@
 <script setup>
 import Nav from './component/nav.vue'
 import Header from './component/header.vue'
+
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { signOut } from 'firebase/auth'
+import { auth } from '../../firebase'
+
+const router = useRouter()
+
+const moderators = ref([])
+
+async function handleSignOut() {
+
+    await signOut(auth);
+
+    router.push('/mod-login');
+
+}
+
+async function loadAllModerators() {
+
+    const idToken = await auth.currentUser.getIdToken();
+
+    const response = await fetch(
+        "http://localhost:3000/api/moderators/all",
+        {
+            headers: {
+                Authorization: `Bearer ${idToken}`
+            }
+        }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+        moderators.value = result.data;
+    }
+
+}
+
+onMounted(() => {
+    loadAllModerators();
+});
 </script>
 
 <template>
     <div id="page-main" class="page">
-        <Nav />
-        <Header :pending="4" :accepted="1" :rejected="1" />
+        <Nav @sign-out="handleSignOut" />
+        <Header />
 
         <div class="content-card">
+
             <h1>All Applications</h1>
-            <p>All moderator view goes here.</p>
+
+            <div
+                v-for="moderator in moderators"
+                :key="moderator.uid"
+                class="application-card"
+            >
+
+                <h3>
+                    {{ moderator.first_name }}
+                    {{ moderator.last_name }}
+                </h3>
+
+                <p>{{ moderator.email }}</p>
+
+                <p>Affiliation: {{ moderator.affiliation }}</p>
+
+                <p>Status: {{ moderator.approval_status }}</p>
+
+            </div>
+
         </div>
     </div>
 </template>
@@ -32,5 +94,21 @@ h1 {
 
 p {
     color: #d6d9f5;
+}
+
+.application-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.application-card h3 {
+    margin-bottom: 8px;
+}
+
+.application-card p {
+    margin: 4px 0;
 }
 </style>

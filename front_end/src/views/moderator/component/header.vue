@@ -1,15 +1,37 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-
-const props = defineProps({
-  pending: { type: Number, default: 0 },
-  accepted: { type: Number, default: 0 },
-  rejected: { type: Number, default: 0 },
-})
+import { auth } from '../../../firebase'
 
 const route = useRoute()
 
-const total = () => props.pending + props.accepted + props.rejected
+const stats = ref({
+  pending: 0,
+  accepted: 0,
+  rejected: 0,
+  total: 0
+})
+
+async function loadStats() {
+
+  const idToken = await auth.currentUser.getIdToken();
+
+  const response = await fetch("http://localhost:3000/api/moderators/stats", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${idToken}`
+    }
+  });
+
+  const result = await response.json();
+
+  if (result.success) {
+    stats.value = result.data;
+  }
+
+}
+
+onMounted(loadStats);
 
 const tabs = [
   { label: 'Pending', to: '/moderator/pending' },
@@ -27,19 +49,19 @@ const tabs = [
 
   <div class="mod-stats">
     <div class="mod-stat-card pending">
-      <div class="num">{{ pending }}</div>
+      <div class="num">{{ stats.pending }}</div>
       <div class="label">Pending</div>
     </div>
     <div class="mod-stat-card accepted">
-      <div class="num">{{ accepted }}</div>
+      <div class="num">{{ stats.accepted }}</div>
       <div class="label">Accepted</div>
     </div>
     <div class="mod-stat-card rejected">
-      <div class="num">{{ rejected }}</div>
+      <div class="num">{{ stats.rejected }}</div>
       <div class="label">Rejected</div>
     </div>
     <div class="mod-stat-card">
-      <div class="num">{{ total() }}</div>
+      <div class="num">{{ stats.total }}</div>
       <div class="label">Total</div>
     </div>
   </div>

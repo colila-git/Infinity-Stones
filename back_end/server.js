@@ -8,6 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 require("./config/firebaseAdmin");
 const eventRoutes = require("./routes/eventRoutes");
 const moderatorRoutes = require("./routes/moderatorRoutes");
+const registrationRoutes = require("./routes/registrationRoutes");
 const { logger } = require("./middleware/logger");
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(logger);
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/moderators", moderatorRoutes);
+app.use("/api/registrations", registrationRoutes);
 
 app.use(errorHandler);
 

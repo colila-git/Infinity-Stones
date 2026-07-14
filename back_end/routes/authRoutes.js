@@ -6,6 +6,9 @@ const authController = require("../controllers/authController");
 // Registration
 router.post("/register", authController.register);
 
+router.post("/login", authController.login);
+router.post("/mod-login", authController.modLogin);
+
 // Test
 router.get("/test", (req, res) => {
     res.json({
@@ -14,6 +17,6 @@ router.get("/test", (req, res) => {
     });
 });
 
-module.exports = router;
+router.post("/me", authController.getCurrentUser);
 
-router.post("/login", authController.login);
+module.exports = router;

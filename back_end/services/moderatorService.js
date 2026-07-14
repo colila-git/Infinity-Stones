@@ -1,56 +1,217 @@
-const moderatorApplications = [
-    {
-        uid: "uid123",
-        firstName: "Juan",
-        lastName: "Dela Cruz",
-        affiliation: "CO",
-        email: "juan@gbox.adnu.edu.ph",
-        approvalStatus: "pending"
-    },
-    {
-        uid: "uid456",
-        firstName: "Maria",
-        lastName: "Santos",
-        affiliation: "SH",
-        email: "maria@gbox.adnu.edu.ph",
-        approvalStatus: "pending"
-    }
-];
+const { pool } = require("../config/db");
+
+exports.getAllModerators = async () => {
+
+    const [rows] = await pool.query(
+        `
+        SELECT
+            uid,
+            first_name,
+            last_name,
+            affiliation,
+            email,
+            approval_status
+        FROM students
+        WHERE account_type = ?
+        `,
+        [
+            "moderator"
+        ]
+    );
+
+    return rows;
+
+};
 
 exports.getPendingModerators = async () => {
-    return moderatorApplications.filter(
-        moderator => moderator.approvalStatus === "pending"
+
+    const [rows] = await pool.query(
+        `
+        SELECT
+            uid,
+            first_name,
+            last_name,
+            affiliation,
+            email,
+            approval_status
+        FROM students
+        WHERE account_type = ?
+        AND approval_status = ?
+        `,
+        [
+            "moderator",
+            "pending"
+        ]
     );
+
+    return rows;
 };
 
-exports.approveModerator = async (uid) => {
+exports.getAcceptedModerators = async () => {
 
-    const moderator = moderatorApplications.find(
-        m => m.uid === uid
+    const [rows] = await pool.query(
+        `
+        SELECT
+            s.uid,
+            s.first_name,
+            s.last_name,
+            s.affiliation,
+            s.email,
+            s.approval_status,
+            s.approved_at,
+            CONCAT(
+                approver.first_name,
+                ' ',
+                approver.last_name
+            ) AS approved_by_name
+        FROM students s
+
+        LEFT JOIN students approver
+        ON s.approved_by = approver.uid
+
+        WHERE s.account_type = ?
+        AND s.approval_status = ?
+        `,
+        [
+            "moderator",
+            "approved"
+        ]
     );
 
-    if (!moderator) {
+    return rows;
+
+};
+
+exports.getRejectedModerators = async () => {
+
+    const [rows] = await pool.query(
+        `
+        SELECT
+            s.uid,
+            s.first_name,
+            s.last_name,
+            s.affiliation,
+            s.email,
+            s.approval_status,
+            s.rejected_at,
+            CONCAT(
+                rejector.first_name,
+                ' ',
+                rejector.last_name
+            ) AS rejected_by_name
+        FROM students s
+
+        LEFT JOIN students rejector
+        ON s.rejected_by = rejector.uid
+
+        WHERE s.account_type = ?
+        AND s.approval_status = ?
+        `,
+        [
+            "moderator",
+            "rejected"
+        ]
+    );
+
+    return rows;
+
+};
+
+exports.approveModerator = async (uid, approvedBy) => {
+
+    const [result] = await pool.query(
+        `
+        UPDATE students
+        SET
+            approval_status = ?,
+            approved_by = ?,
+            approved_at = NOW()
+        WHERE uid = ?
+        AND account_type = ?
+        `,
+        ["approved", approvedBy, uid, "moderator"]
+    );
+
+    if (result.affectedRows === 0) {
         return null;
     }
 
-    moderator.approvalStatus = "approved";
+    const [rows] = await pool.query(
+        `
+        SELECT
+            uid,
+            first_name,
+            last_name,
+            affiliation,
+            email,
+            approval_status
+        FROM students
+        WHERE uid = ?
+        `,
+        [uid]
+    );
 
-    return moderator;
+    return rows[0];
 
 };
 
-exports.rejectModerator = async (uid) => {
+exports.rejectModerator = async (uid, rejectedBy) => {
 
-    const moderator = moderatorApplications.find(
-        m => m.uid === uid
+    const [result] = await pool.query(
+        `
+        UPDATE students
+        SET
+            approval_status = ?,
+            rejected_by = ?,
+            rejected_at = NOW()
+        WHERE uid = ?
+        AND account_type = ?
+        `,
+        ["rejected", rejectedBy, uid, "moderator"]
     );
 
-    if (!moderator) {
+    if (result.affectedRows === 0) {
         return null;
     }
 
-    moderator.approvalStatus = "rejected";
+    const [rows] = await pool.query(
+        `
+        SELECT
+            uid,
+            first_name,
+            last_name,
+            affiliation,
+            email,
+            approval_status
+        FROM students
+        WHERE uid = ?
+        `,
+        [uid]
+    );
 
-    return moderator;
+    return rows[0];
+
+};
+
+exports.getModeratorStats = async () => {
+
+    const [rows] = await pool.query(
+        `
+        SELECT
+            COUNT(*) AS total,
+            SUM(approval_status = 'pending') AS pending,
+            SUM(approval_status = 'approved') AS accepted,
+            SUM(approval_status = 'rejected') AS rejected
+        FROM students
+        WHERE account_type = 'moderator'
+        `
+    );
+
+    return {
+        total: Number(rows[0].total),
+        pending: Number(rows[0].pending),
+        accepted: Number(rows[0].accepted),
+        rejected: Number(rows[0].rejected)
+    };
 
 };

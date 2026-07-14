@@ -1,161 +1,102 @@
-const sports = [
-    {
-        id: 1,
-        name: "Basketball",
-        category: "Outdoor Sports"
-    },
-    {
-        id: 2,
-        name: "Volleyball",
-        category: "Outdoor Sports"
-    },
-    {
-        id: 3,
-        name: "Mobile Legends",
-        category: "Esports"
-    },
-    {
-        id: 4,
-        name: "Chess",
-        category: "Board Games"
-    }
-];
+const { pool } = require("../config/db");
 
-exports.getSports = async (req, res) => {
+exports.getSports = async () => {
 
-    try {
+    const [rows] = await pool.query(
+        `
+        SELECT
+            events.id,
+            events.name,
+            events.category,
+            events.max_slots,
 
-        const sports = await eventService.getSports();
+            COUNT(
+                CASE
+                    WHEN registrations.status = 'approved'
+                    THEN 1
+                END
+            ) AS approved_slots
 
-        return res.json({
-            success: true,
-            data: sports
-        });
+        FROM events
 
-    } catch (error) {
+        LEFT JOIN registrations
+            ON events.id = registrations.event_id
 
-        console.error(error);
+        GROUP BY
+            events.id,
+            events.name,
+            events.category,
+            events.max_slots
 
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error."
-        });
+        ORDER BY events.id
+        `
+    );
 
-    }
+    return rows;
+
 };
 
-exports.getSportById = async (req, res) => {
+exports.getSportById = async (id) => {
 
-    try {
+    const [rows] = await pool.query(
+        "SELECT * FROM events WHERE id = ?",
+        [id]
+    );
 
-        const { id } = req.params;
+    return rows[0] || null;
 
-        const sport = await eventService.getSportById(id);
-
-        if (!sport) {
-            return res.status(404).json({
-                success: false,
-                message: "Sport not found."
-            });
-        }
-
-        return res.json({
-            success: true,
-            data: sport
-        });
-
-    } catch (error) {
-
-        console.error(error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error."
-        });
-
-    }
 };
 
 exports.createSport = async (sportData) => {
 
-    try {
+    const [result] = await pool.query(
+        "INSERT INTO events (name, category) VALUES (?, ?)",
+        [
+            sportData.name,
+            sportData.category
+        ]
+    );
 
-    const newSport = {
-        id: sports.length
-            ? Math.max(...sports.map(s => s.id)) + 1
-            : 1,
+    return {
+        id: result.insertId,
         name: sportData.name,
         category: sportData.category
     };
 
-    sports.push(newSport);
-
-    return newSport;
-
-
-}   catch (error) {
-
-        console.error(error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error."
-        });
-
-    }
-};    
+};
 
 exports.updateSport = async (id, sportData) => {
 
-    try {
+    const [result] = await pool.query(
+        "UPDATE events SET name = ?, category = ? WHERE id = ?",
+        [
+            sportData.name,
+            sportData.category,
+            id
+        ]
+    );
 
-    const sport = sports.find(s => s.id === Number(id));
+    if (result.affectedRows === 0) {
+        return null;
+    }
+
+    return await exports.getSportById(id);
+
+};
+
+exports.deleteSport = async (id) => {
+
+    const sport = await exports.getSportById(id);
 
     if (!sport) {
         return null;
     }
 
-    sport.name = sportData.name;
-    sport.category = sportData.category;
+    await pool.query(
+        "DELETE FROM events WHERE id = ?",
+        [id]
+    );
 
     return sport;
 
-    }   catch (error) {
-
-        console.error(error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error."
-        });
-
-    }
-};
-
-exports.deleteSport = async (id) => {
-
-    try {
-
-    const index = sports.findIndex(sport => sport.id === Number(id));
-
-    if (index === -1) {
-        return null;
-    }
-
-    const deletedSport = sports[index];
-
-    sports.splice(index, 1);
-
-    return deletedSport;
-
-    }   catch (error) {
-
-        console.error(error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error."
-        });
-
-    }
 };

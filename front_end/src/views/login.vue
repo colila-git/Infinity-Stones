@@ -53,7 +53,26 @@ async function handleLogin() {
 
 const idToken = await userCredential.user.getIdToken();
 
-console.log(idToken);
+console.log("FIREBASE TOKEN:", idToken);
+
+const response = await fetch("http://localhost:3000/api/auth/login", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    idToken
+  })
+});
+
+
+const result = await response.json();
+
+
+if (!response.ok || !result.success) {
+  throw new Error(result.message);
+}
+
 
 router.push('/main');
   } catch (err) {

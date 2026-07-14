@@ -3,6 +3,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { auth } from "../../firebase";
 import Header from '../../components/header.vue';
 
 const route = useRoute();
@@ -13,49 +14,64 @@ const sportsData = {
     title: 'Outdoor Sports',
     heroGradient: 'linear-gradient(135deg,#1A3A6B,#1e4080)',
     events: [
-      { name: "Basketball (Men's)", venue: 'Gym A', slots: 20, total: 20, desc: 'Full-court 5-on-5 basketball tournament for male CCS students. Double elimination format.' },
-      { name: "Basketball (Women's)", venue: 'Gym A', slots: 20, total: 20, desc: 'Full-court 5-on-5 basketball tournament for female CCS students. Double elimination format.' },
-      { name: "Volleyball (Men's)", venue: 'Gym B', slots: 18, total: 18, desc: 'Indoor volleyball tournament for male CCS students. Single round-robin pool play followed by playoffs.' },
-      { name: "Volleyball (Women's)", venue: 'Gym B', slots: 18, total: 18, desc: 'Indoor volleyball tournament for female CCS students. Single round-robin pool play followed by playoffs.' },
-      { name: "Badminton (Men's)", venue: 'Multi-Purpose Hall', slots: 12, total: 12, desc: 'Badminton tournament for male CCS students. Single elimination format.' },
-      { name: "Badminton (Women's)", venue: 'Multi-Purpose Hall', slots: 12, total: 12, desc: 'Badminton tournament for female CCS students. Single elimination format.' },
-      { name: "Football (Men's)", venue: 'Football Field', slots: 22, total: 22, desc: '11-a-side football tournament for male CCS students. Group stage followed by knockout rounds.' },
-      { name: "Football (Women's)", venue: 'Football Field', slots: 22, total: 22, desc: '11-a-side football tournament for female CCS students. Group stage followed by knockout rounds.' },
+      {
+        id: 1,
+        name: "Basketball",
+        venue: "Gym A",
+        slots: 20,
+        total: 20,
+        desc: "5-on-5 basketball tournament for CCS students."
+      },
+      {
+        id: 2,
+        name: "Volleyball",
+        venue: "Gym B",
+        slots: 18,
+        total: 18,
+        desc: "Volleyball tournament for CCS students."
+      },
+      {
+        id: 6,
+        name: "Badminton",
+        venue: "Multi-Purpose Hall",
+        slots: 12,
+        total: 12,
+        desc: "Badminton tournament for CCS students."
+      }
     ],
   },
   esports: {
     title: 'Esports',
     heroGradient: 'linear-gradient(135deg,#0f0a2e,#3a1a8a)',
     events: [
-      { name: 'Valorant (5v5)', venue: 'Computer Lab A', slots: 15, total: 15, desc: 'Team-based tactical FPS. 5 players per team, best-of-3 format. Spike Rush rules apply for group stage.' },
-      { name: 'Mobile Legends: Bang Bang', venue: 'Computer Lab A', slots: 30, total: 30, desc: "5v5 MOBA tournament on mobile. Draft pick format for playoffs. Bring your own device." },
-      { name: 'League of Legends (5v5)', venue: 'Computer Lab B', slots: 15, total: 15, desc: "Classic 5v5 Summoner's Rift. Draft mode enabled. PC provided by the venue." },
-      { name: 'Call of Duty Mobile', venue: 'Computer Lab B', slots: 30, total: 30, desc: 'Squad vs squad battle royale and multiplayer modes. Bring your own device and headset.' },
-      { name: 'Tekken 8 (1v1)', venue: 'AVR Room 3', slots: 15, total: 15, desc: 'Solo fighting game tournament. Double elimination bracket. Controllers and arcade sticks allowed.' },
+      {
+        id: 3,
+        name: "Mobile Legends",
+        venue: "Computer Lab A",
+        slots: 30,
+        total: 30,
+        desc: "5v5 Mobile Legends tournament."
+      }
     ],
   },
   boardgames: {
     title: 'Board Games',
     heroGradient: 'linear-gradient(135deg,#1A4A3A,#1e8060)',
     events: [
-      { name: 'Chess', venue: 'AVR Room 1', slots: 16, total: 16, desc: 'Chess tournament for CCS students. Swiss system format.' },
-      { name: 'Checkers', venue: 'AVR Room 1', slots: 16, total: 16, desc: 'Standard checkers tournament in single-elimination format.' },
-      { name: 'Scrabble', venue: 'AVR Room 2', slots: 16, total: 16, desc: 'English Scrabble tournament. Official OSPD dictionary used.' },
-      { name: 'Game of the Generals', venue: 'AVR Room 2', slots: 16, total: 16, desc: 'Filipino strategy board game tournament in single-elimination format.' },
-      { name: 'Sungka', venue: 'AVR Room 2', slots: 16, total: 16, desc: 'Traditional Filipino mancala game tournament.' },
+      {
+        id: 4,
+        name: "Chess",
+        venue: "AVR Room 1",
+        slots: 16,
+        total: 16,
+        desc: "Chess tournament for CCS students."
+      }
     ],
   },
   musical: {
     title: 'Musical & Performing Arts',
     heroGradient: 'linear-gradient(135deg,#4A1A1A,#8B2020)',
-    events: [
-      { name: 'Battle of the Bands', venue: 'Auditorium', slots: 12, total: 12, desc: 'Bands perform original songs. Judged on musicality, stage presence, and originality.' },
-      { name: 'Solo Singing', venue: 'Auditorium', slots: 10, total: 10, desc: 'Individual singing competition open to all CCS students.' },
-      { name: 'Duo Singing', venue: 'Auditorium', slots: 12, total: 12, desc: 'Pair singing competition. Register with your partner.' },
-      { name: 'Dance Competition', venue: 'Auditorium', slots: 25, total: 25, desc: 'Group dance showdown open to all CCS students. 5-minute performance per group.' },
-      { name: 'Cheerdance', venue: 'Auditorium', slots: 50, total: 50, desc: 'Cheerdance competition open to all CCS students. Judged on choreography, stunts, and energy.' },
-      { name: 'Gimmick Parade', venue: 'Campus Grounds', slots: 50, total: 50, desc: 'Parade and gimmick showcase for all CCS students. Creativity and teamwork are key.' },
-    ],
+    events: [],
   },
 };
 
@@ -112,6 +128,30 @@ function goToRegister(eventName) {
 function handleAvatarClick() {
   // TODO: open drawer once Drawer.vue is built
 }
+
+async function registerForEvent(event) {
+
+  const idToken = await auth.currentUser.getIdToken();
+
+  const response = await fetch(
+    "http://localhost:3000/api/registrations",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`
+      },
+      body: JSON.stringify({
+        eventId: event.id
+      })
+    }
+  );
+
+  const result = await response.json();
+
+  alert(result.message);
+
+}
 </script>
 
 <template>
@@ -165,7 +205,10 @@ function handleAvatarClick() {
             <div class="slots">
               TBA · {{ ev.venue }} · <strong>{{ ev.slots }} left</strong>
             </div>
-            <button class="btn-sm" @click.stop="goToRegister(ev.name)">
+            <button
+              class="btn-sm"
+              @click.stop="registerForEvent(ev)"
+            >
               Sign Up
             </button>
           </div>

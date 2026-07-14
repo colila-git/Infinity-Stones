@@ -29,26 +29,43 @@ const router = createRouter({
       path: '/moderator',
       name: 'moderator',
       component: () => import('../views/moderator/pending.vue'),
+      meta: { requiresModerator: true }
     },
     {
       path: '/moderator/pending',
       name: 'moderator-pending',
       component: () => import('../views/moderator/pending.vue'),
+      meta: { requiresModerator: true }
     },
     {
       path: '/moderator/accepted',
       name: 'moderator-accepted',
       component: () => import('../views/moderator/accepted.vue'),
+      meta: { requiresModerator: true }
     },
     {
       path: '/moderator/rejected',
       name: 'moderator-rejected',
       component: () => import('../views/moderator/rejected.vue'),
+      meta: { requiresModerator: true }
     },
     {
       path: '/moderator/all',
       name: 'moderator-all',
       component: () => import('../views/moderator/all.vue'),
+      meta: { requiresModerator: true }
+    },
+    {
+      path: '/moderator/event-registrations',
+      name: 'moderator-event-registrations',
+      component: () => import('../views/moderator/eventRegistrations.vue'),
+      meta: { requiresModerator: true }
+    },
+    {
+      path: '/moderator/registrations',
+      name: 'moderator-registrations',
+      component: () => import('../views/moderator/registrations.vue'),
+      meta: { requiresModerator: true }
     },
     {
       path: '/main',
@@ -74,6 +91,12 @@ const router = createRouter({
       component: () => import('../views/student/register.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/my-registrations',
+      name: 'my-registrations',
+      component: () => import('../views/student/myRegistrations.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 
@@ -87,13 +110,51 @@ let authReadyPromise = new Promise((resolve) => {
 })
 
 router.beforeEach(async (to) => {
-  if (!to.meta.requiresAuth) return true
 
   await authReadyPromise
+
+  if (!to.meta.requiresAuth && !to.meta.requiresModerator) {
+    return true
+  }
+
+
   if (!auth.currentUser) {
     return { name: 'login' }
   }
-  return true
+
+
+  if (to.meta.requiresModerator) {
+
+    const idToken = await auth.currentUser.getIdToken();
+
+
+    const response = await fetch("http://localhost:3000/api/auth/me", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        idToken
+      })
+    });
+
+
+    const result = await response.json();
+
+
+    if (
+      !result.success ||
+      result.data.account_type !== "moderator" ||
+      result.data.approval_status !== "approved"
+    ) {
+      return { name: "menu" };
+    }
+
+  }
+
+
+  return true;
+
 })
 
 export default router

@@ -1,20 +1,61 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '../firebase'
+import { signOut } from "firebase/auth";
 
 const router = useRouter();
 
 const modLoginId = ref('');
 const modLoginPw = ref('');
 
-function handleModLogin() {
+async function handleModLogin() {
+
   if (!modLoginId.value.trim() || !modLoginPw.value.trim()) {
     alert('Please enter your moderator credentials.');
     return;
   }
 
-  // TODO: replace with real API call to back_end
-  router.push('/moderator');
+  try {
+
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      modLoginId.value,
+      modLoginPw.value
+    );
+
+    const idToken = await userCredential.user.getIdToken();
+
+    console.log("TOKEN:", idToken);
+
+    const response = await fetch(
+      "http://localhost:3000/api/moderators/check",
+      {
+        headers: {
+          Authorization: `Bearer ${idToken}`
+        }
+      }
+    );
+
+    const result = await response.json();
+
+    console.log(result);
+
+    if (!result.success) {
+      alert(result.message);
+      return;
+    }
+
+    router.push('/moderator');
+
+  } catch (error) {
+
+    console.error(error);
+    alert("Invalid login credentials.");
+
+  }
+
 }
 
 function goToLanding() {
