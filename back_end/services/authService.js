@@ -82,45 +82,46 @@
 
     };
 
-    exports.loginUser = async(idToken)=>{
+exports.loginUser = async (idToken) => {
 
-        const decodedToken = await getAuth().verifyIdToken(idToken);
+    console.log("Step 1: Verifying Firebase token...");
+    const decodedToken = await getAuth().verifyIdToken(idToken);
 
-        const [rows] = await pool.query(
+    console.log("Step 2: Firebase verified:", decodedToken.uid);
+
+    const [rows] = await pool.query(
         `
-            SELECT *
-            FROM students
-            WHERE uid = ?
-            `,
-            [decodedToken.uid]
-        );
+        SELECT *
+        FROM students
+        WHERE uid = ?
+        `,
+        [decodedToken.uid]
+    );
 
+    console.log("Step 3: Query returned", rows.length, "rows");
 
-        if(rows.length === 0){
-            throw new Error("User record not found.");
-        }
+    if (rows.length === 0) {
+        throw new Error("User record not found.");
+    }
 
+    const user = rows[0];
 
-        const user = rows[0];
-
-
-        if(user.account_type === "moderator" &&
-            user.approval_status !== "approved")
-        {
-            return {
-                success:false,
-                message:"Moderator account is still pending approval."
-            };
-        }
-
-
+    if (
+        user.account_type === "moderator" &&
+        user.approval_status !== "approved"
+    ) {
         return {
-            success:true,
-            message:"Login successful.",
-            data:user
+            success: false,
+            message: "Moderator account is still pending approval."
         };
+    }
 
-    };  
+    return {
+        success: true,
+        message: "Login successful.",
+        data: user
+    };
+};
 
     exports.modLoginUser = async (idToken) => {
 
