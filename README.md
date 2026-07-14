@@ -43,3 +43,8 @@ npm run build
 3. Configure the backend database credentials in `.env`.
 4. Run the backend server.
 5. Run the frontend application.
+
+## Moderator Account Credentials
+
+email: moderatormod@gbox.adnu.edu.ph
+password: moderatormod
